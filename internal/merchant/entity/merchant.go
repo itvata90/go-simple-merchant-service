@@ -20,8 +20,8 @@ type Merchant struct {
 	Email     string         `json:"email"`
 	Phone     string         `json:"phone"`
 	Status    MerchantStatus `json:"status"`
-	CreatedAt string         `json:"createdAt"`
-	CreatedBy string         `json:"createdBy,omitempty"`
-	UpdatedAt sql.NullTime   `json:"updatedAt"`
-	UpdatedBy string         `json:"updatedBy,omitempty"`
+	CreatedAt sql.NullTime   `json:"create_at"`
+	CreatedBy string         `json:"created_by,omitempty"`
+	UpdatedAt sql.NullTime   `json:"updated_at"`
+	UpdatedBy string         `json:"updated_by,omitempty"`
 }

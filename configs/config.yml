@@ -1,0 +1,25 @@
+server:
+  name: merchant-api-service
+  port: 8080
+
+sql:
+  driver: mysql
+  user: root
+  password: 12345678x@X
+  host: localhost
+  port: 3306
+  database: simplemerchantdb
+
+log:
+  level: info
+  map:
+    time: "@timestamp"
+    msg: message
+
+middleware:
+  log: true
+  skips: /health
+  request: request
+  response: response
+  size: size
+    
