@@ -1,27 +1,33 @@
 package domain
 
 import (
-	"database/sql"
-)
-
-type MerchantStatus string
-
-const (
-	MerchantActive   MerchantStatus = "Active"
-	MerchantInActive MerchantStatus = "Inactive"
+	"time"
 )
 
 type Merchant struct {
-	Code      string         `json:"code"`
-	Name      string         `json:"name"`
-	Country   string         `json:"country"`
-	Province  string         `json:"province"`
-	Address   string         `json:"address,omitempty"`
-	Email     string         `json:"email"`
-	Phone     string         `json:"phone"`
-	Status    MerchantStatus `json:"status"`
-	CreatedAt sql.NullTime   `json:"create_at"`
-	CreatedBy string         `json:"created_by,omitempty"`
-	UpdatedAt sql.NullTime   `json:"updated_at"`
-	UpdatedBy string         `json:"updated_by,omitempty"`
+	Code           string     `json:"code"`
+	ContactName    string     `json:"contactName"`
+	Province       string     `json:"province,omitempty"`
+	District       string     `json:"district,omitempty"`
+	Street         string     `json:"street,omitempty"`
+	ContactEmail   string     `json:"contactEmail,omitempty"`
+	ContactPhoneNo string     `json:"contactPhoneNo,omitempty"`
+	OwnerId        string     `json:"ownerId,omitempty"`
+	TaxId          string     `json:"taxId,omitempty"`
+	Status         string     `json:"status,omitempty"`
+	CreatedAt      *time.Time `json:"createdAt,omitempty"`
+	UpdatedAt      *time.Time `json:"updatedAt,omitempty"`
+	CreatedBy      string     `json:"created_by,omitempty"`
+	UpdatedBy      string     `json:"updated_by,omitempty"`
+}
+
+type GetMerchantsResponse struct {
+	Data   []Merchant `json:"data"`
+	Paging Pagination `json:"pagination"`
+}
+
+type Pagination struct {
+	Total     int64 `json:"total"`
+	PageIndex int   `json:"pageIndex"`
+	PageSize  int   `json:"pageSize"`
 }

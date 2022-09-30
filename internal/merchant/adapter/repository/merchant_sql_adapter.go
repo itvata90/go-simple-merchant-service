@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 	domain "merchant-service/internal/merchant/entity"
-	"time"
 )
 
 func NewMerchantSQLAdapter(db *sql.DB) *MerchantSQLAdapter {
@@ -15,26 +16,29 @@ type MerchantSQLAdapter struct {
 	DB *sql.DB
 }
 
-func (r *MerchantSQLAdapter) GetMerchants(ctx context.Context, pageSize int, pageIdx int) ([]domain.Merchant, error) {
+func (r *MerchantSQLAdapter) GetMerchants(ctx context.Context, pageSize int, pageIdx int) ([]domain.Merchant, int64, error) {
+	var total int64
 	stmt, err := r.DB.Prepare(`
-		select 
-			code,
-			name,
-			province,
-			country,
-			address,
-			email,
-			phone,
-			status,
-			created_at,
-			updated_at
-		from merchants limit ? offset ?`)
+	select 
+	code,
+	contact_name,
+	province,
+	district,
+	street,
+	contact_email,
+	contact_phone_no,
+	owner_id,
+	tax_id,
+	status,
+	created_at,
+	updated_at
+from merchants limit ? offset ?`)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 	rows, err := stmt.QueryContext(ctx, pageSize, pageIdx*pageSize)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 	defer rows.Close()
 	var merchants []domain.Merchant
@@ -42,25 +46,38 @@ func (r *MerchantSQLAdapter) GetMerchants(ctx context.Context, pageSize int, pag
 		var merchant domain.Merchant
 		err := rows.Scan(
 			&merchant.Code,
-			&merchant.Name,
+			&merchant.ContactName,
 			&merchant.Province,
-			&merchant.Country,
-			&merchant.Address,
-			&merchant.Email,
-			&merchant.Phone,
+			&merchant.District,
+			&merchant.Street,
+			&merchant.ContactEmail,
+			&merchant.ContactPhoneNo,
+			&merchant.OwnerId,
+			&merchant.TaxId,
 			&merchant.Status,
 			&merchant.CreatedAt,
 			&merchant.UpdatedAt,
 		)
 		if err != nil {
-			return merchants, err
+			return merchants, total, err
 		}
 		merchants = append(merchants, merchant)
 	}
+
+	stmt, err = r.DB.Prepare(`
+		select 
+			count(*) as total
+		from merchants`)
+
 	if err != nil {
-		return merchants, err
+		return nil, total, err
 	}
-	return merchants, nil
+
+	if err := stmt.QueryRow().Scan(&total); err != nil {
+		return nil, total, err
+	}
+
+	return merchants, total, nil
 }
 
 func (r *MerchantSQLAdapter) GetMerchantByCode(ctx context.Context, code string) (*domain.Merchant, error) {
@@ -68,12 +85,14 @@ func (r *MerchantSQLAdapter) GetMerchantByCode(ctx context.Context, code string)
 	stmt, err := r.DB.Prepare(`
 		select 
 			code,
-			name,
+			contact_name,
 			province,
-			country,
-			address,
-			email,
-			phone,
+			district,
+			street,
+			contact_email,
+			contact_phone_no,
+			owner_id,
+			tax_id,
 			status,
 			created_at,
 			updated_at
@@ -84,60 +103,77 @@ func (r *MerchantSQLAdapter) GetMerchantByCode(ctx context.Context, code string)
 
 	err = stmt.QueryRow(code).Scan(
 		&merchant.Code,
-		&merchant.Name,
+		&merchant.ContactName,
 		&merchant.Province,
-		&merchant.Country,
-		&merchant.Address,
-		&merchant.Email,
-		&merchant.Phone,
+		&merchant.District,
+		&merchant.Street,
+		&merchant.ContactEmail,
+		&merchant.ContactPhoneNo,
+		&merchant.OwnerId,
+		&merchant.TaxId,
 		&merchant.Status,
 		&merchant.CreatedAt,
 		&merchant.UpdatedAt,
 	)
 
 	if err != nil {
-		return nil, err
+		if err != sql.ErrNoRows {
+			return nil, err
+		} else {
+			return nil, nil
+		}
 	}
-
 	return &merchant, nil
 }
 
 func (r *MerchantSQLAdapter) CreateMerchant(ctx context.Context, merchant *domain.Merchant) (int64, error) {
-	merchant.CreatedAt = sql.NullTime{
-		Time:  time.Now(),
-		Valid: true,
+	tx := GetTx(r, ctx)
+
+	if notValid, err := inValidField(tx, "contact_phone_no", merchant.ContactPhoneNo, ""); err != nil {
+		return -1, err
+	} else if notValid {
+		return -1, fmt.Errorf("duplicate phone %s", merchant.ContactPhoneNo)
 	}
+	if notValid, err := inValidField(tx, "contact_email", merchant.ContactEmail, ""); err != nil {
+		return -1, err
+	} else if notValid {
+		return -1, fmt.Errorf("duplicate email %s", merchant.ContactEmail)
+	}
+
 	query := `
 		insert 
 			into merchants (
 				code,
-				name,
+				contact_name,
 				province,
-				country,
-				address,
-				email,
-				phone,
+				district,
+				street,
+				contact_email,
+				contact_phone_no,
+				owner_id,
+			    tax_id,
 				status,
 				created_at) 
-		values (?,?,?,?,?,?,?,?,?)`
+		values (?,?,?,?,?,?,?,?,?,?,?)`
 
-	tx := GetTx(r, ctx)
 	stmt, err := tx.Prepare(query)
 	if err != nil {
 		return -1, err
 	}
 
-	res, err := stmt.ExecContext(
-		ctx,
+	res, err := stmt.Exec(
 		merchant.Code,
-		merchant.Name,
+		merchant.ContactName,
 		merchant.Province,
-		merchant.Country,
-		merchant.Address,
-		merchant.Email,
-		merchant.Phone,
+		merchant.District,
+		merchant.Street,
+		merchant.ContactEmail,
+		merchant.ContactPhoneNo,
+		merchant.OwnerId,
+		merchant.TaxId,
 		merchant.Status,
-		merchant.CreatedAt)
+		merchant.CreatedAt,
+	)
 
 	if err != nil {
 		er := tx.Rollback()
@@ -156,37 +192,44 @@ func (r *MerchantSQLAdapter) CreateMerchant(ctx context.Context, merchant *domai
 }
 
 func (r *MerchantSQLAdapter) UpdateMerchant(ctx context.Context, merchant *domain.Merchant) (int64, error) {
-	merchant.UpdatedAt = sql.NullTime{
-		Time:  time.Now(),
-		Valid: true,
+	tx := GetTx(r, ctx)
+
+	if notValid, err := inValidField(tx, "contact_phone_no", merchant.ContactPhoneNo, merchant.Code); err != nil {
+		return -1, err
+	} else if notValid {
+		return 0, fmt.Errorf("duplicate phone %s", merchant.ContactPhoneNo)
 	}
-	query := `
+	if notValid, err := inValidField(tx, "contact_email", merchant.ContactEmail, merchant.Code); err != nil {
+		return -1, err
+	} else if notValid {
+		return 0, fmt.Errorf("duplicate email %s", merchant.ContactEmail)
+	}
+	stmt, err := tx.Prepare(`
 		update merchants 
 		set 
-			name = ?,
+			contact_name = ?,
 			province = ?,
 			district = ?,
 			street = ?,
-			email = ?,
-			phone = ?,
+			contact_email = ?,
+			contact_phone_no = ?,
+			owner_id = ?,
+			tax_id = ?,
 			status = ?,
 			updated_at = ?
-		where code = ?`
-
-	tx := GetTx(r, ctx)
-	stmt, err := tx.Prepare(query)
+		where code = ?`)
 	if err != nil {
 		return -1, err
 	}
-
-	res, err := stmt.ExecContext(
-		ctx,
-		merchant.Name,
+	res, err := stmt.Exec(
+		merchant.ContactName,
 		merchant.Province,
-		merchant.Country,
-		merchant.Address,
-		merchant.Email,
-		merchant.Phone,
+		merchant.District,
+		merchant.Street,
+		merchant.ContactEmail,
+		merchant.ContactPhoneNo,
+		merchant.OwnerId,
+		merchant.TaxId,
 		merchant.Status,
 		merchant.UpdatedAt,
 		merchant.Code,
@@ -244,4 +287,28 @@ func GetTx(r *MerchantSQLAdapter, ctx context.Context) *sql.Tx {
 
 	return tx
 
+}
+
+func inValidField(obj interface{}, field string, value string, excludeValue string) (bool, error) {
+	var notValid bool
+	var stmt *sql.Stmt
+	var err error
+	query := fmt.Sprintf(`select if(count(*), 'true', 'false') as no_valid from merchants where %s = ? and not code = ?`, field)
+	if db, ok := obj.(*sql.DB); ok {
+		stmt, err = db.Prepare(query)
+		if err != nil {
+			return false, err
+		}
+	} else if tx, ok := obj.(*sql.Tx); ok {
+		stmt, err = tx.Prepare(query)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		return false, errors.New("Unknow db handler type")
+	}
+	if err = stmt.QueryRow(value, excludeValue).Scan(&notValid); err != nil {
+		return false, err
+	}
+	return notValid, nil
 }
