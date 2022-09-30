@@ -27,7 +27,7 @@ PUT /merchants/{code}
 DELETE /merchants/{code}
 ```
 
-Detail: [postman sample](data\testMerchants_CollectionAPI.postman_collection.json) 
+Detail: [postman sample](data%5CtestMerchants_CollectionAPI.postman_collection.json) 
 
 ## Team Members:
 ```
@@ -39,4 +39,4 @@ PUT /team_members/{code}
 DELETE /team_members/{code}
 ```
 
-Detail: [postman sample](data\testTeamMembers_CollectionAPI.postman_collection.json)
+Detail: [postman sample](data%5CtestTeamMembers_CollectionAPI.postman_collection.json)

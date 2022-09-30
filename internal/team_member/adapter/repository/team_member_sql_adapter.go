@@ -25,7 +25,7 @@ type TeamMemberSQLAdapter struct {
 func (r *TeamMemberSQLAdapter) GetTeamMembers(ctx context.Context, pageSize int, pageIndex int) ([]domain.TeamMember, int64, error) {
 	var total int64
 	var members []domain.TeamMember
-	queryMembers := "select id, username, first_name, last_name, birth_date, nationality, contact_email, contact_phone_no, province, district, street, merchant_code, tax_id, role, created_at, updated_at from team_members limit ? offset ?"
+	queryMembers := "select id, username, first_name, last_name, birth_date, nationality, contact_email, contact_phone_no, province, district, street, merchant_code, role, created_at, updated_at from team_members limit ? offset ?"
 	err := q.Query(ctx, r.DB, nil, &members, queryMembers, pageSize, pageIndex*pageSize)
 	if err != nil {
 		return nil, total, err
@@ -46,7 +46,7 @@ func (r *TeamMemberSQLAdapter) GetTeamMembers(ctx context.Context, pageSize int,
 
 func (r *TeamMemberSQLAdapter) GetTeamMemberById(ctx context.Context, id string) (*domain.TeamMember, error) {
 	var member []domain.TeamMember
-	queryMember := fmt.Sprintf("select id, username, first_name, last_name, birth_date, nationality, contact_email, contact_phone_no, province, district, street, merchant_code, tax_id, role, created_at, updated_at from team_members where id = %s limit 1", q.BuildParam(1))
+	queryMember := fmt.Sprintf("select id, username, first_name, last_name, birth_date, nationality, contact_email, contact_phone_no, province, district, street, merchant_code, role, created_at, updated_at from team_members where id = %s limit 1", q.BuildParam(1))
 	err := q.Query(ctx, r.DB, nil, &member, queryMember, id)
 	if err != nil {
 		return nil, err
