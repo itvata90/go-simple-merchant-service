@@ -2,84 +2,152 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
-	"reflect"
 	"strconv"
 
-	"github.com/google/uuid"
-
-	"github.com/core-go/core"
+	sv "github.com/core-go/core"
+	"github.com/gorilla/mux"
 
 	domain "merchant-service/internal/merchant/entity"
 	"merchant-service/internal/merchant/service"
 )
 
-func NewMerchantHandler(find func(context.Context, interface{}, interface{}, int64, ...int64) (int64, string, error), service service.MerchantService, status core.StatusConfig, logError func(context.Context, string, ...map[string]interface{}), validate func(context.Context, interface{}) ([]core.ErrorMessage, error), action *core.ActionConfig) *HttpMerchantHandler {
-	modelType := reflect.TypeOf(domain.Merchant{})
-	params := core.CreateParams(modelType, &status, logError, validate, action)
-	return &HttpMerchantHandler{service: service, Params: params}
+func NewMerchantHandler(service service.MerchantService, validate func(context.Context, interface{}) ([]sv.ErrorMessage, error), logError func(context.Context, string, ...map[string]interface{})) *HttpMerchantHandler {
+	return &HttpMerchantHandler{service: service, validate: validate, logError: logError}
 }
 
 type HttpMerchantHandler struct {
-	service service.MerchantService
-	*core.Params
+	service  service.MerchantService
+	validate func(context.Context, interface{}) ([]sv.ErrorMessage, error)
+	logError func(context.Context, string, ...map[string]interface{})
 }
 
 func (h *HttpMerchantHandler) GetMerchants(w http.ResponseWriter, r *http.Request) {
-	pageIdxParam := r.URL.Query().Get("pageIdx")
+	pageIndexParam := r.URL.Query().Get("pageIndex")
 	pageSizeParam := r.URL.Query().Get("pageSize")
-	pageIdx, err := strconv.Atoi(pageIdxParam)
+	pageIndex, err := strconv.Atoi(pageIndexParam)
 	if err != nil {
-		core.RespondModel(w, r, nil, err, h.Error, nil)
+		http.Error(w, "pageIndex must be an integer", http.StatusBadRequest)
+		return
 	}
 	pageSize, err := strconv.Atoi(pageSizeParam)
 	if err != nil {
-		core.RespondModel(w, r, nil, err, h.Error, nil)
+		http.Error(w, "pageSize must be an integer", http.StatusBadRequest)
+		return
 	}
-	res, err := h.service.GetMerchants(r.Context(), pageSize, pageIdx)
-	core.RespondModel(w, r, res, err, h.Error, nil)
+	res, err := h.service.GetMerchants(r.Context(), pageSize, pageIndex)
+	if err != nil {
+		h.logError(r.Context(), err.Error())
+		http.Error(w, sv.InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	JSON(w, http.StatusOK, res)
 }
 
 func (h *HttpMerchantHandler) GetMerchantByCode(w http.ResponseWriter, r *http.Request) {
-	code := core.GetRequiredParam(w, r)
-	if len(code) > 0 {
-		res, err := h.service.GetMerchantByCode(r.Context(), code)
-		core.RespondModel(w, r, res, err, h.Error, nil)
+	code := mux.Vars(r)["code"]
+	if len(code) == 0 {
+		http.Error(w, "code cannot be empty", http.StatusBadRequest)
+		return
 	}
+	merchant, err := h.service.GetMerchantByCode(r.Context(), code)
+	if err != nil {
+		h.logError(r.Context(), err.Error())
+		http.Error(w, sv.InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	if merchant == nil {
+		JSON(w, http.StatusNotFound, nil)
+		return
+	}
+	JSON(w, http.StatusOK, merchant)
 }
 
 func (h *HttpMerchantHandler) CreateMerchant(w http.ResponseWriter, r *http.Request) {
 	var merchant domain.Merchant
-	er1 := core.Decode(w, r, &merchant)
-	if er1 == nil {
-		errors, er2 := h.Validate(r.Context(), &merchant)
-		if !core.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Create) {
-			id, err2 := uuid.NewUUID()
-			if err2 == nil {
-				merchant.Code = id.String()
-				res, er3 := h.service.CreateMerchant(r.Context(), &merchant)
-				core.AfterCreated(w, r, &merchant, res, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Create)
-			}
-		}
+	er1 := json.NewDecoder(r.Body).Decode(&merchant)
+	defer r.Body.Close()
+	if er1 != nil {
+		http.Error(w, er1.Error(), http.StatusBadRequest)
+		return
 	}
+	errors, er2 := h.validate(r.Context(), &merchant)
+	if er2 != nil {
+		h.logError(r.Context(), er2.Error())
+		http.Error(w, sv.InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	if len(errors) > 0 {
+		h.logError(r.Context(), er2.Error())
+		JSON(w, http.StatusUnprocessableEntity, errors)
+		return
+	}
+	res, er3 := h.service.CreateMerchant(r.Context(), &merchant)
+	if er3 != nil {
+		h.logError(r.Context(), er3.Error())
+		http.Error(w, sv.InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	JSON(w, http.StatusCreated, res)
 }
 
 func (h *HttpMerchantHandler) UpdateMerchant(w http.ResponseWriter, r *http.Request) {
 	var merchant domain.Merchant
-	er1 := core.DecodeAndCheckId(w, r, &merchant, h.Keys, h.Indexes)
-	if er1 == nil {
-		errors, er2 := h.Validate(r.Context(), &merchant)
-		if !core.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Update) {
-			res, er3 := h.service.UpdateMerchant(r.Context(), &merchant)
-			core.HandleResult(w, r, &merchant, res, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Update)
-		}
+	er1 := json.NewDecoder(r.Body).Decode(&merchant)
+	defer r.Body.Close()
+	if er1 != nil {
+		http.Error(w, er1.Error(), http.StatusBadRequest)
+		return
 	}
+	code := mux.Vars(r)["code"]
+	if len(code) == 0 {
+		http.Error(w, "Id cannot be empty", http.StatusBadRequest)
+		return
+	}
+	if len(merchant.Code) == 0 {
+		merchant.Code = code
+	} else if code != merchant.Code {
+		http.Error(w, "Id not match", http.StatusBadRequest)
+		return
+	}
+	errors, er2 := h.validate(r.Context(), &merchant)
+	if er2 != nil {
+		h.logError(r.Context(), er2.Error())
+		http.Error(w, sv.InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	if len(errors) > 0 {
+		h.logError(r.Context(), er2.Error())
+		JSON(w, http.StatusUnprocessableEntity, errors)
+		return
+	}
+	res, er3 := h.service.UpdateMerchant(r.Context(), &merchant)
+	if er3 != nil {
+		h.logError(r.Context(), er3.Error())
+		http.Error(w, sv.InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	JSON(w, http.StatusOK, res)
 }
 
 func (h *HttpMerchantHandler) DeleteMerchant(w http.ResponseWriter, r *http.Request) {
-	code := core.GetRequiredParam(w, r)
-	if len(code) > 0 {
-		res, err := h.service.DeleteMerchant(r.Context(), code)
-		core.HandleDelete(w, r, res, err, h.Error, h.Log, h.Resource, h.Action.Delete)
+	code := mux.Vars(r)["code"]
+	if len(code) == 0 {
+		http.Error(w, "code cannot be empty", http.StatusBadRequest)
+		return
 	}
+	res, err := h.service.DeleteMerchant(r.Context(), code)
+	if err != nil {
+		h.logError(r.Context(), err.Error())
+		http.Error(w, sv.InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	JSON(w, http.StatusOK, res)
+}
+
+func JSON(w http.ResponseWriter, code int, res interface{}) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	return json.NewEncoder(w).Encode(res)
 }

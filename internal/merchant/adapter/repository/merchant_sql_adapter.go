@@ -260,7 +260,7 @@ func (r *MerchantSQLAdapter) DeleteMerchant(ctx context.Context, code string) (i
 		return -1, err
 	}
 
-	res, err := stmt.ExecContext(ctx, code)
+	res, err := stmt.Exec(code)
 
 	if err != nil {
 		er := tx.Rollback()
