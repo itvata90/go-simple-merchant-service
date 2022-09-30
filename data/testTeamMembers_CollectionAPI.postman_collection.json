@@ -1,0 +1,178 @@
+{
+	"info": {
+		"_postman_id": "222300b0-d6ff-48d0-be56-2f89f239eaec",
+		"name": "testTeamMembers_CollectionAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "team member - get team member by id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/team_members/6a077d3c-1bbb-11ed-861d-0242ac120002",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"team_members",
+						"6a077d3c-1bbb-11ed-861d-0242ac120002"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "team member - get team members",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/team_members?pageIndex=0&pageSize=3",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"team_members"
+					],
+					"query": [
+						{
+							"key": "pageIndex",
+							"value": "0"
+						},
+						{
+							"key": "pageSize",
+							"value": "3"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "team member - create",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"member100\",\r\n    \"password\": \"password@6\",\r\n    \"firstName\": \"Fname1\",\r\n    \"lastName\": \"Lname1\",\r\n    \"birthDate\": \"1991-05-06T00:00:00+07:00\",\r\n    \"nationality\": \"nationality1\",\r\n    \"contactEmail\": \"emailasdowwwwhdoa2@gmail.com\",\r\n    \"contactPhoneNo\": \"0881238623\",\r\n    \"province\": \"province1\",\r\n    \"district\": \"district1\",\r\n    \"street\": \"street1\",\r\n    \"merchantCode\": \"734cb079-1a2e-11ed-b4c1-7c10c91fb7f4\",\r\n    \"role\": \"Staff\",\r\n    \"createdAt\": \"2006-01-02T03:04:05+07:00\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/team_members",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"team_members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "team member - update",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\":\"619d8fa9-05c6-462b-9545-12d3d12ee844\",\r\n    \"username\": \"member6\",\r\n    \"password\": \"password@6\",\r\n    \"firstName\": \"Fname1\",\r\n    \"lastName\": \"Lname1\",\r\n    \"birthDate\": \"1991-05-06T00:00:00+07:00\",\r\n    \"nationality\": \"nationality1\",\r\n    \"contactEmail\": \"emailmaoooo@gmail.com\",\r\n    \"contactPhoneNo\": \"01287654123\",\r\n    \"province\": \"province1\",\r\n    \"district\": \"district1\",\r\n    \"street\": \"street1\",\r\n    \"merchantCode\": \"734cb079-1a2e-11ed-b4c1-7c10c91fb7f4\",\r\n    \"role\": \"Staff\",\r\n    \"createdAt\": \"2006-01-02T03:04:05+07:00\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/team_members/619d8fa9-05c6-462b-9545-12d3d12ee844",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"team_members",
+						"619d8fa9-05c6-462b-9545-12d3d12ee844"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "healthCheck",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/health",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "team member - delete",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/team_members/619d8fa9-05c6-462b-9545-12d3d12ee844",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"team_members",
+						"619d8fa9-05c6-462b-9545-12d3d12ee844"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "team member - get team members by merchant code",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/team_members/merchants/734cb079-1a2e-11ed-b4c1-7c10c91fb7f4?pageIndex=0&pageSize=3",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"team_members",
+						"merchants",
+						"734cb079-1a2e-11ed-b4c1-7c10c91fb7f4"
+					],
+					"query": [
+						{
+							"key": "pageIndex",
+							"value": "0"
+						},
+						{
+							"key": "pageSize",
+							"value": "3"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
