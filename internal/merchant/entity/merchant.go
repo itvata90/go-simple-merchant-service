@@ -17,8 +17,8 @@ type Merchant struct {
 	Status         string     `json:"status,omitempty"`
 	CreatedAt      *time.Time `json:"createdAt,omitempty"`
 	UpdatedAt      *time.Time `json:"updatedAt,omitempty"`
-	CreatedBy      string     `json:"created_by,omitempty"`
-	UpdatedBy      string     `json:"updated_by,omitempty"`
+	CreatedBy      string     `json:"createdBy,omitempty"`
+	UpdatedBy      string     `json:"updatedBy,omitempty"`
 }
 
 type GetMerchantsResponse struct {

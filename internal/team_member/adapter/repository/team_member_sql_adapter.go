@@ -10,6 +10,7 @@ import (
 	q "github.com/core-go/sql"
 )
 
+// Applying core-go/sql for buid insert/update query
 const (
 	teamMembersTable = "team_members"
 )

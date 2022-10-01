@@ -59,7 +59,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"username\": \"member100\",\r\n    \"password\": \"password@6\",\r\n    \"firstName\": \"Fname1\",\r\n    \"lastName\": \"Lname1\",\r\n    \"birthDate\": \"1991-05-06T00:00:00+07:00\",\r\n    \"nationality\": \"nationality1\",\r\n    \"contactEmail\": \"emailasdowwwwhdoa2@gmail.com\",\r\n    \"contactPhoneNo\": \"0881238623\",\r\n    \"province\": \"province1\",\r\n    \"district\": \"district1\",\r\n    \"street\": \"street1\",\r\n    \"merchantCode\": \"734cb079-1a2e-11ed-b4c1-7c10c91fb7f4\",\r\n    \"role\": \"Staff\",\r\n    \"createdAt\": \"2006-01-02T03:04:05+07:00\"\r\n}",
+					"raw": "{\r\n    \"username\": \"member100\",\r\n    \"password\": \"password@6\",\r\n    \"firstName\": \"Fname1\",\r\n    \"lastName\": \"Lname1\",\r\n    \"birthDate\": \"1991-05-06T00:00:00+07:00\",\r\n    \"nationality\": \"nationality1\",\r\n    \"contactEmail\": \"emailasdowwwwhdoa2@gmail.com\",\r\n    \"contactPhoneNo\": \"0881238623\",\r\n    \"province\": \"province1\",\r\n    \"district\": \"district1\",\r\n    \"street\": \"street1\",\r\n    \"merchantCode\": \"734cb079-1a2e-11ed-b4c1-7c10c91fb7f4\",\r\n    \"role\": \"Staff\",\r\n }",
 					"options": {
 						"raw": {
 							"language": "json"
