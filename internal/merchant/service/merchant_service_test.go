@@ -201,6 +201,7 @@ func TestGetMerchantByCode(t *testing.T) {
 }
 
 func TestGetMerchantByCodeErr(t *testing.T) {
+	m1.Code = "" // creating new don't need a guid
 	db, mock := NewMock()
 	repo := repository.NewMerchantSQLAdapter(db)
 	service := &merchantService{repository: repo}
@@ -233,23 +234,7 @@ insert
 		tax_id,		
 		status,
 		created_at)
-values (?,?,?,?,?,?,?,?,?,?)`
-
-// func TestCreateErrorInValid(t *testing.T) {
-// 	db, mock := NewMock()
-// 	repo := repository.NewMerchantSQLAdapter(db)
-// 	service := &merchantService{repository: repo}
-// 	defer func() {
-// 		repo.DB.Close()
-// 	}()
-// 	row1 := sqlmock.NewRows([]string{"not_valid"}).AddRow("false")
-// 	mock.ExpectPrepare(validQuery("ContactPhoneNo")).ExpectQuery().WithArgs(m1.ContactPhoneNo, m1.Code).WillReturnRows(row1)
-// 	row2 := sqlmock.NewRows([]string{"not_valid"}).AddRow("false")
-// 	mock.ExpectPrepare(validQuery("ContactEmail")).ExpectQuery().WithArgs(m1.ContactEmail, m1.Code).WillReturnRows(row2)
-// 	rowsAffected, err := service.CreateMerchant(context.TODO(), &m1)
-// 	assert.Equal(t, int64(-1), rowsAffected)
-// 	assert.Error(t, err)
-// }
+values (?,?,?,?,?,?,?,?,?,?,?)`
 
 var updateQuery = `
 update merchants
@@ -275,9 +260,9 @@ func TestUpdate(t *testing.T) {
 	}()
 	mock.ExpectBegin()
 	row1 := sqlmock.NewRows([]string{"not_valid"}).AddRow("false")
-	mock.ExpectPrepare(validQuery("ContactPhoneNo")).ExpectQuery().WithArgs(m1.ContactPhoneNo, m1.Code).WillReturnRows(row1)
+	mock.ExpectPrepare(validQuery("contact_phone_no")).ExpectQuery().WithArgs(m1.ContactPhoneNo, m1.Code).WillReturnRows(row1)
 	row2 := sqlmock.NewRows([]string{"not_valid"}).AddRow("false")
-	mock.ExpectPrepare(validQuery("ContactEmail")).ExpectQuery().WithArgs(m1.ContactEmail, m1.Code).WillReturnRows(row2)
+	mock.ExpectPrepare(validQuery("contact_email")).ExpectQuery().WithArgs(m1.ContactEmail, m1.Code).WillReturnRows(row2)
 	mock.ExpectPrepare(updateQuery).ExpectExec().WithArgs(
 		m1.ContactName,
 		m1.Province,
@@ -314,22 +299,8 @@ func TestDelete(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestDeleteError(t *testing.T) {
-	db, mock := NewMock()
-	repo := repository.NewMerchantSQLAdapter(db)
-	service := &merchantService{repository: repo}
-	defer func() {
-		repo.DB.Close()
-	}()
-	mock.ExpectBegin()
-	mock.ExpectPrepare(deleteQuery).ExpectExec().WithArgs(m1.Code).WillReturnResult(sqlmock.NewErrorResult(sql.ErrNoRows))
-	mock.ExpectCommit()
-	rowsAffected, err := service.DeleteMerchant(context.TODO(), m1.Code)
-	assert.Equal(t, int64(-1), rowsAffected)
-	assert.Error(t, err)
-}
-
 func TestCreate(t *testing.T) {
+	m1.Code = "" // creating new don't need a guid
 	db, mock := NewMock()
 	repo := repository.NewMerchantSQLAdapter(db)
 	service := &merchantService{repository: repo}
@@ -338,9 +309,9 @@ func TestCreate(t *testing.T) {
 	}()
 	mock.ExpectBegin()
 	row1 := sqlmock.NewRows([]string{"not_valid"}).AddRow("false")
-	mock.ExpectPrepare(validQuery("ContactPhoneNo")).ExpectQuery().WithArgs(m1.ContactPhoneNo, m1.Code).WillReturnRows(row1)
+	mock.ExpectPrepare(validQuery("contact_phone_no")).ExpectQuery().WithArgs(m1.ContactPhoneNo, m1.Code).WillReturnRows(row1)
 	row2 := sqlmock.NewRows([]string{"not_valid"}).AddRow("false")
-	mock.ExpectPrepare(validQuery("ContactEmail")).ExpectQuery().WithArgs(m1.ContactEmail, m1.Code).WillReturnRows(row2)
+	mock.ExpectPrepare(validQuery("contact_email")).ExpectQuery().WithArgs(m1.ContactEmail, m1.Code).WillReturnRows(row2)
 	mock.ExpectPrepare(insertQuery).
 		ExpectExec().
 		WithArgs(

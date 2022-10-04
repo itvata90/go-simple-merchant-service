@@ -10,7 +10,7 @@ type TeamMember struct {
 	Password       string     `json:"password" gorm:"column:password"`
 	FirstName      string     `json:"firstName" gorm:"column:first_name"`
 	LastName       string     `json:"lastName" gorm:"column:last_name"`
-	BirthDate      string     `json:"birthDate,omitempty" gorm:"column:birth_date"`
+	BirthDate      *time.Time `json:"birthDate,omitempty" gorm:"column:birth_date"`
 	Nationality    string     `json:"nationality,omitempty" gorm:"column:nationality"`
 	ContactEmail   string     `json:"contactEmail" gorm:"column:contact_email"`
 	ContactPhoneNo string     `json:"contactPhoneNo" gorm:"column:contact_phone_no"`
